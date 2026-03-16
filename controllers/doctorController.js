@@ -52,12 +52,12 @@ function normalizeDocForClient(raw = {}) {
     doc.schedule = {};
   }
 
-    doc.availability = doc.availability === undefined ? "Available" : doc.availability;
-    doc.patients = doc.patients ?? "";
-    doc.rating = doc.rating ?? 0;
-    doc.fee = doc.fee ?? doc.fees ?? 0;
+  doc.availability = doc.availability === undefined ? "Available" : doc.availability;
+  doc.patients = doc.patients ?? "";
+  doc.rating = doc.rating ?? 0;
+  doc.fee = doc.fee ?? doc.fees ?? 0;
 
-    return doc;
+  return doc;
 }
 
 //to create a doctor
@@ -115,21 +115,21 @@ export async function createDoctor(req, res) {
         success: false,
         message: "Server Misconfigured"
       });
-
-      const token = jwt.sign({
-        id: doc._id.toString(), email: doc.email,
-        role: "doctor"
-      }, secrect, { expiresIn: "7d" });
-
-      const out = normalizeDocForClient(doc.toObject());
-      delete out.password;
-
-      return res.status(201).json({
-        success: true,
-        data: out,
-        token
-      })
     }
+
+    const token = jwt.sign({
+      id: doc._id.toString(), email: doc.email,
+      role: "doctor"
+    }, secrect, { expiresIn: "7d" });
+
+    const out = normalizeDocForClient(doc.toObject());
+    delete out.password;
+
+    return res.status(201).json({
+      success: true,
+      data: out,
+      token
+    });
 
 
   } catch (error) {
@@ -155,7 +155,7 @@ export const getDoctors = async (req, res) => {
       const re = new RegExp(q.trim(), "i");
       match.$or = [{ name: re }, { specialization: re }, { speciality: re }, { email: re }];
     }
-    
+
     const docs = await Doctor.aggregate([
       { $match: match },
       {
@@ -229,7 +229,7 @@ export const getDoctors = async (req, res) => {
   }
 };
 
-//update doctor by
+//update doctor
 export async function updateDoctor(req, res) {
   try {
     const { id } = req.params;
@@ -243,8 +243,8 @@ export async function updateDoctor(req, res) {
     if (!existing) return res.status(404).json({ success: false, message: "Doctor not found" });
 
     if (req.file?.path) {
-      const uploaded = await uploadToCloudinary(req.file.path, "doctors");
-      
+      const uploaded = await uploadOnCloudinary(req.file.path, "doctors");
+
       if (uploaded) {
         const previousPublicId = existing.imagePublicId;
         existing.imageUrl = uploaded.secure_url || uploaded.url || existing.imageUrl;
@@ -264,9 +264,9 @@ export async function updateDoctor(req, res) {
 
     if (body.email && body.email !== existing.email) {
       const other = await Doctor.findOne({ email: body.email.toLowerCase() });
-      if (other && other._id.toString() !== id) return res.status(409).json({ 
+      if (other && other._id.toString() !== id) return res.status(409).json({
         success: false,
-        message: "Email already in use" 
+        message: "Email already in use"
       });
       existing.email = body.email.toLowerCase();
     }
@@ -278,7 +278,7 @@ export async function updateDoctor(req, res) {
     const out = normalizeDocForClient(existing.toObject());
     delete out.password;
     return res.json({ success: true, data: out });//update data
-  } catch (err) {  
+  } catch (err) {
     console.error("updateDoctor error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
@@ -286,58 +286,57 @@ export async function updateDoctor(req, res) {
 
 //to delete a doctor
 export async function deleteDoctor(req, res) {
-  try{
-    const { id } = req.params;  
+  try {
+    const { id } = req.params;
     const existing = await Doctor.findById(id);
     if (!existing) return res.status(404).json({
-       success: false, 
-       message: "Doctor not found"
-       });
+      success: false,
+      message: "Doctor not found"
+    });
 
-       if(existing.imagePublicId){
-          try
-          {
-            await deleteFromCloudinary(existing.imagePublicId);
-          }catch(e){
-            console.warn("deleteFromCloudinary warning:", e?.message || e);
-          }
-       }
+    if (existing.imagePublicId) {
+      try {
+        await deleteFromCloudinary(existing.imagePublicId);
+      } catch (e) {
+        console.warn("deleteFromCloudinary warning:", e?.message || e);
+      }
+    }
 
-       await Doctor.findByIdAndDelete(id);
-        return res.json({ success: true, message: "Doctor deleted successfully" });
-  }catch(err){
+    await Doctor.findByIdAndDelete(id);
+    return res.json({ success: true, message: "Doctor deleted successfully" });
+  } catch (err) {
     console.error("delete Doctor error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
 
 //to toggle doctor availability
-export async function toggleDoctorAvailability(req, res) {  
+export async function toggleDoctorAvailability(req, res) {
   try {
     const { id } = req.params;
 
-    if(!req.doctor || String(req.doctor._id || req.doctor.id) !== String(id)){
+    if (!req.doctor || String(req.doctor._id || req.doctor.id) !== String(id)) {
       return res.status(403).json({ success: false, message: "Not authorized to update this doctor is availability" });
     }
 
     const doc = await Doctor.findById(id);
-    if (!doc) return res.status(404).json({ 
+    if (!doc) return res.status(404).json({
       success: false,
-      message: "Doctor not found" 
+      message: "Doctor not found"
     });
 
-    if(typeof doc.availability === "boolean")  
+    if (typeof doc.availability === "boolean")
       doc.availability = !doc.availability;
-    else 
-      doc.availability = doc.availability === "Available" 
-    ? "Unavailable" 
-    : "Available";
+    else
+      doc.availability = doc.availability === "Available"
+        ? "Unavailable"
+        : "Available";
 
     await doc.save();
     const out = normalizeDocForClient(doc.toObject());
     delete out.password;
     return res.json({ success: true, data: out });
-  }catch(err){
+  } catch (err) {
     console.error("toggleAvailability error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
@@ -349,42 +348,42 @@ export async function loginDoctor(req, res) {
     const { email, password } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({
-         success: false,
-         message: "Email and password are required"
-         });
+        success: false,
+        message: "Email and password are required"
+      });
     }
 
-         const doc = await Doctor.findOne({ email: email.toLowerCase() }).select("+password");
-         if(!doc) return res.status(404).json({
-          success: false,
-          message: "Invalid creds"
-         }); 
+    const doc = await Doctor.findOne({ email: email.toLowerCase() }).select("+password");
+    if (!doc) return res.status(404).json({
+      success: false,
+      message: "Invalid creds"
+    });
 
-         if(doc.password !== password) return res.status(401).json({
-          success: false,
-          message: "Invalid creds"
-         });
+    if (doc.password !== password) return res.status(401).json({
+      success: false,
+      message: "Invalid creds"
+    });
 
-         const secrect = process.env.JWT_SECRET;
-         if(!secrect) return res.status(500).json({
-          success: false,
-          message: "Server Misconfigured"
-         });
+    const secrect = process.env.JWT_SECRET;
+    if (!secrect) return res.status(500).json({
+      success: false,
+      message: "Server Misconfigured"
+    });
 
-         const token = jwt.sign({
-          id: doc._id.toString(), email:doc.email,
-          role: "doctor"
-         }, secrect, { expiresIn: "7d" });
+    const token = jwt.sign({
+      id: doc._id.toString(), email: doc.email,
+      role: "doctor"
+    }, secrect, { expiresIn: "7d" });
 
-         const out = doc.toObject();
-         delete out.password;
-          return res.json({
-            success: true,
-            data: out,
-            token
-          });
-    }
-  catch(err){
+    const out = doc.toObject();
+    delete out.password;
+    return res.json({
+      success: true,
+      data: out,
+      token
+    });
+  }
+  catch (err) {
     console.error("login Doctor error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
