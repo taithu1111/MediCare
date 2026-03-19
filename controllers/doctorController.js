@@ -1,5 +1,5 @@
 import Doctor from "../models/Doctor.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 // Helper functions
@@ -82,7 +82,7 @@ export async function createDoctor(req, res) {
     let imageUrl = body.imageUrl || null;
     let imagePublicId = body.imagePublicId || null;
     if (req.file?.path) {
-      const uploaded = await uploadOnCloudinary(req.file.path, "doctors");
+      const uploaded = await uploadToCloudinary(req.file.path, "doctors");
       imageUrl = uploaded?.secure_url || uploaded?.url || imageUrl;
       imagePublicId = uploaded?.public_id || uploaded?.public_id || imagePublicId;
     }
@@ -243,7 +243,7 @@ export async function updateDoctor(req, res) {
     if (!existing) return res.status(404).json({ success: false, message: "Doctor not found" });
 
     if (req.file?.path) {
-      const uploaded = await uploadOnCloudinary(req.file.path, "doctors");
+      const uploaded = await uploadToCloudinary(req.file.path, "doctors");
 
       if (uploaded) {
         const previousPublicId = existing.imagePublicId;
