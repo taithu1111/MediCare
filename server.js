@@ -23,6 +23,7 @@ connectDB();
 
 app.use("/api/doctors", doctorRouter);
 app.use("/api/services", serviceRouter);
+app.use("/api/appointments", appointmentRouter);
 
 
 app.get('/', (req, res) => {
