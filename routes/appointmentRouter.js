@@ -1,9 +1,9 @@
 import express from "express";
 import { clerkMiddleware, requireAuth } from "@clerk/express";
 import {
-    confirmPayment, getAppointments, getAppointmentByDoctor, createAppointment, updateAppointment
+    confirmPayment, getAppointments, getAppointmentById, getAppointmentByDoctor, createAppointment, updateAppointment
     , cancelAppointment, getStats, getRegisterUserCount
-} from "../controllers/appointmentController.js";
+} from "../controllers/appointment/index.js";
 
 const appointmentRouter = express.Router();
 
@@ -13,7 +13,7 @@ appointmentRouter.get("/stats/summary", getStats);
 
 //authentication routes
 appointmentRouter.post("/", clerkMiddleware(), requireAuth(), createAppointment);
-appointmentRouter.get("/my-appointments", clerkMiddleware(), requireAuth(), getAppointmentByPatient);
+appointmentRouter.get("/my-appointments", clerkMiddleware(), requireAuth(), getAppointmentById);
 
 appointmentRouter.get("/doctor/:doctorId", getAppointmentByDoctor);
 

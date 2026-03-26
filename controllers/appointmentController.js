@@ -244,7 +244,7 @@ export const createAppointment = async (req, res) => {
         };
 
         // Free appointment
-        if (numericFee === 0) {
+        if (numbericFee === 0) {
             const created = await Appointment.create({
                 ...base,
                 status: "Confirmed",
@@ -259,7 +259,7 @@ export const createAppointment = async (req, res) => {
             const created = await Appointment.create({
                 ...base,
                 status: "Pending",
-                payment: { method: "Cash", status: "Pending", amount: numericFee },
+                payment: { method: "Cash", status: "Pending", amount: numbericFee },
             });
             return res.status(201).json({ success: true, appointment: created, checkoutUrl: null });
         }
@@ -289,7 +289,7 @@ export const createAppointment = async (req, res) => {
                         price_data: {
                             currency: "inr",
                             product_data: { name: `Appointment - ${String(patientName).slice(0, 40)}` },
-                            unit_amount: Math.round(numericFee * 100),
+                            unit_amount: Math.round(numbericFee * 100),
                         },
                         quantity: 1,
                     },
@@ -568,7 +568,7 @@ export const getAppointmentByDoctor = async (req, res) => {
 export async function getRegisterUserCount(req, res) {
     try {
         const totalUser = await clerkClient.users.getCount();
-        return res.json({ success: true, totalUsers });
+        return res.json({ success: true, totalUsers: totalUser });
     } catch (err) {
         console.error("getAppointmentsByDoctor eror", err);
         return res.status(500).json({ success: false, message: "Server error    " })
