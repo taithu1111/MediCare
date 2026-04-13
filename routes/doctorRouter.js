@@ -7,7 +7,8 @@ import {
     loginDoctor,
     updateDoctor,
     deleteDoctor,
-    toggleDoctorAvailability
+    toggleDoctorAvailability,
+    getDoctorById
 } from "../controllers/doctorController.js";
 
 import doctorAuth from "../middlewares/doctorAuth.js";
@@ -15,6 +16,7 @@ import doctorAuth from "../middlewares/doctorAuth.js";
 const doctorRouter = express.Router();
 
 doctorRouter.get("/", getDoctors);
+doctorRouter.get("/:id", getDoctorById);
 doctorRouter.post("/login", loginDoctor);
 
 // Tạo mới doctor (có upload ảnh)

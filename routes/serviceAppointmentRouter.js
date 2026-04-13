@@ -7,7 +7,7 @@ const serviceAppointmentRouter = express.Router();
 
 serviceAppointmentRouter.get("/", getServiceAppointments);
 serviceAppointmentRouter.get("/confirm", confirmServicePayment);
-serviceAppointmentRouter.get("/", getServiceAppointmentStats);
+serviceAppointmentRouter.get("/stats/summary", getServiceAppointmentStats);
 
 serviceAppointmentRouter.post("/", clerkMiddleware(), requireAuth(), createServiceAppointment);
 

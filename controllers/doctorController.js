@@ -229,6 +229,41 @@ export const getDoctors = async (req, res) => {
   }
 };
 
+// get single doctor by ID
+export const getDoctorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const doc = await Doctor.findById(id);
+
+    if (!doc) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    const normalized = normalizeDocForClient(doc.toObject());
+    delete normalized.password;
+
+    return res.json({
+      success: true,
+      data: normalized
+    });
+  } catch (err) {
+    console.error("getDoctorById error:", err);
+    if (err.name === 'CastError') {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid Doctor ID format"
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 //update doctor
 export async function updateDoctor(req, res) {
   try {
