@@ -276,7 +276,7 @@ export const confirmServicePayment = async (req, res) => {
             { "payment.sessionId": session_id },
             {
                 $set: {
-                    "payment.status": "Confirmed",
+                    "payment.status": "Paid",
                     "payment.providerId": session.payment_intent || "",
                     "payment.paidAt": new Date(),
                     status: "Confirmed",
@@ -290,7 +290,7 @@ export const confirmServicePayment = async (req, res) => {
                 { _id: session.metadata.appointmentId },
                 {
                     $set: {
-                        "payment.status": "Confirmed",
+                        "payment.status": "Paid",
                         "payment.providerId": session.payment_intent || "",
                         "payment.paidAt": new Date(),
                         status: "Confirmed",
@@ -337,7 +337,7 @@ export const getServiceAppointments = async (req, res) => {
         return res.json({
             success: true,
             appointments,
-            meta: { page, limit, total, count: appointment.length }
+            meta: { page, limit, total, count: appointments.length }
         });
 
     } catch (err) {
@@ -374,7 +374,7 @@ export const getServiceAppointmentById = async (req, res) => {
 export const updateServiceAppointment = async (req, res) => {
     try {
         const { id } = req.params;
-        const body = req.body;
+        const body = req.body || {};
         const updates = {};
 
         //first check wherther fill if yes then update the feild 
@@ -406,7 +406,7 @@ export const updateServiceAppointment = async (req, res) => {
         if (updates.payment) {
             const method = updates.payment.method || updates.payment?.method;
             if (method && String(method).toLowerCase() === "online") updates.status = updates.status || "Confirmed";
-            if (updates.payment.status && updates.payment.status === "Confirmed") {
+            if (updates.payment.status && updates.payment.status === "Paid") {
                 updates.status = "Confirmed";
                 if (updates.payment.paidAt === undefined) updates.payment.paidAt = new Date();
             }
@@ -443,7 +443,7 @@ export const cancelServiceAppointment = async (req, res) => {
         if (appt.status === "Completed") return res.status(400).json({ success: false, message: "Cannot cancel a completed appointment" });
 
         appt.status = "Canceled";
-        if (appt.payment) appt.payment.status = appt.payment.status === "Confirmed" ? "Canceled" : "Pending";
+        if (appt.payment) appt.payment.status = appt.payment.status === "Paid" ? "Refunded" : "Pending";
         await appt.save();
         return res.json({ success: true, appointment: appt });
     } catch (err) {
